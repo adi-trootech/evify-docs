@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evify — Modules 7–8, API, Infra &amp; Data Flows</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --text: #e2e8f0;
+      --text-muted: #8892a4;
+      --code-bg: #161b22;
+      --table-head: #1e2236;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.75;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      min-width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 28px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar .logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .sidebar .doc-title {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .nav-section a {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 5px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.82rem;
+      transition: all 0.2s;
+    }
+
+    .nav-section a:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .nav-files {
+      margin-top: 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .nav-files-title {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      padding: 0 8px;
+    }
+
+    .nav-files a {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 5px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.78rem;
+      transition: all 0.2s;
+    }
+
+    .nav-files a:hover {
+      color: var(--accent2);
+    }
+
+    .nav-files a.current {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .main {
+      flex: 1;
+      padding: 44px 52px;
+      max-width: 1080px;
+    }
+
+    .doc-header {
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.15) 0%, rgba(0, 212, 170, 0.08) 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 32px 36px;
+      margin-bottom: 44px;
+    }
+
+    .doc-header .badge {
+      display: inline-block;
+      background: rgba(108, 99, 255, 0.2);
+      color: var(--accent);
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+
+    .doc-header h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .doc-header p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .module-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 12px 12px 0;
+      padding: 20px 24px;
+      margin: 36px 0 10px;
+    }
+
+    .module-card h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      border: none;
+      margin: 0 0 4px;
+      padding: 0;
+    }
+
+    .module-card h2::before {
+      display: none;
+    }
+
+    .module-card .subtitle {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .module-card .runtime {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 8px;
+      font-weight: 600;
+    }
+
+    .module-card .runtime-go {
+      background: rgba(0, 212, 170, 0.12);
+      color: var(--accent2);
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 36px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 1.25rem;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent2);
+      margin: 22px 0 10px;
+    }
+
+    p {
+      color: var(--text);
+      margin-bottom: 12px;
+      font-size: 0.92rem;
+    }
+
+    .mermaid-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 16px 0;
+      overflow-x: auto;
+      text-align: center;
+    }
+
+    pre {
+      background: var(--code-bg) !important;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.79rem;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84em;
+    }
+
+    :not(pre)>code {
+      background: rgba(108, 99, 255, 0.12);
+      color: var(--accent2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 14px 0;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr {
+      background: var(--table-head);
+    }
+
+    thead th {
+      padding: 11px 14px;
+      text-align: left;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--surface2);
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      font-size: 0.86rem;
+      color: var(--text);
+    }
+
+    ul,
+    ol {
+      padding-left: 22px;
+      margin-bottom: 12px;
+    }
+
+    li {
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+    }
+
+    strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    blockquote {
+      border-left: 3px solid var(--accent);
+      background: rgba(108, 99, 255, 0.08);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 0.88rem;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 36px 0;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    @media(max-width:768px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        padding: 22px 18px;
+      }
+    }
+
+    /* Sequence Flow Diagram Styles */
+    .seq-diagram {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .seq-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    .seq-step:not(:last-child)::after {
+      content: '↓';
+      position: absolute;
+      bottom: -22px;
+      left: 32px;
+      color: var(--accent);
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .seq-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      background: rgba(108, 99, 255, 0.15);
+      color: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      border: 1px solid rgba(108, 99, 255, 0.3);
+    }
+
+    .seq-content {
+      flex: 1;
+    }
+
+    .seq-title {
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .seq-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .seq-actor {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: rgba(0, 212, 170, 0.15);
+      color: var(--accent2);
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .seq-actor.system {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+    }
+
+    .seq-actor.db {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="logo">⚡ Evify</div>
+      <div class="doc-title">Gamification Engine</div>
+      <div class="nav-section">
+        <a href="#capabilities-overview">Capabilities Overview</a>
+        <a href="#admin-workflow-add-new-parameter">Admin Workflow — Add New Parameter</a>
+        <a href="#admin-workflow-create-rule-visual-builder">Admin Workflow — Create Rule (Visual Builder)</a>
+        <a href="#admin-event-system-response-matrix">Admin Event → System Response Matrix</a>
+        <a href="#integration-architecture">Integration Architecture</a>
+        <a href="#wallet-module-integration">Wallet Module Integration</a>
+        <a href="#iot-battery-api-integration">IoT / Battery API Integration</a>
+        <a href="#multi-tenant-webhook-routing">Multi-Tenant Webhook Routing</a>
+        <a href="#rider-facing-apis">Rider-Facing APIs</a>
+        <a href="#admin-apis">Admin APIs</a>
+        <a href="#event-webhook-apis-ingestion">Event Webhook APIs (Ingestion)</a>
+        <a href="#api-response-format">API Response Format</a>
+        <a href="#cache-key-taxonomy">Cache Key Taxonomy</a>
+        <a href="#cache-invalidation-strategy">Cache Invalidation Strategy</a>
+        <a href="#redis-cluster-configuration">Redis Cluster Configuration</a>
+        <a href="#isolation-layers">Isolation Layers</a>
+        <a href="#tenant-onboarding-automation">Tenant Onboarding Automation</a>
+        <a href="#horizontal-scaling-plan">Horizontal Scaling Plan</a>
+        <a href="#performance-targets">Performance Targets</a>
+        <a href="#1-fraud-detection">1. Fraud Detection</a>
+        <a href="#2-duplicate-reward-prevention">2. Duplicate Reward Prevention</a>
+        <a href="#3-rule-conflict-resolution">3. Rule Conflict Resolution</a>
+        <a href="#4-rule-engine-failure-handling">4. Rule Engine Failure Handling</a>
+        <a href="#5-clock-skew-timezone-handling">5. Clock Skew / Timezone Handling</a>
+        <a href="#flow-1-daily-challenge-quot15-orders-challengequot">Flow 1 — Daily Challenge: &quot;15 Orders
+          Challenge&quot;</a>
+        <a href="#flow-2-battery-care-streak-reward">Flow 2 — Battery Care Streak Reward</a>
+        <a href="#flow-3-sla-gold-badge">Flow 3 — SLA Gold Badge</a>
+        <a href="#flow-4-festival-campaign-diwali">Flow 4 — Festival Campaign (Diwali)</a>
+        <a href="#auto-generated-reports">Auto-Generated Reports</a>
+        <a href="#report-pipeline">Report Pipeline</a>
+      </div>
+      <div class="nav-files">
+        <div class="nav-files-title">All Documents</div>
+        <a href="01_system_architecture.html">01 · System Architecture</a>
+        <a href="02_database_schema.html">02 · Database Schema</a>
+        <a href="03_modules_1_to_6.html">03 · Modules 1–6</a>
+        <a href="04_modules_7_8_infra_flows.html" class="current">04 · Infra &amp; Flows</a>
+      </div>
+    </nav>
+    <main class="main">
+      <h1>Evify Gamification Engine — Modules 7–8, API, Infra &amp; Data Flows</h1>
+      <hr>
+      <h1>MODULE 7 — Admin Panel Workflow</h1>
+      <h2 id="capabilities-overview">Capabilities Overview</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Parameter Configurator</td>
+            <td>Add/edit/deactivate parameters with weight, threshold, UI settings</td>
+          </tr>
+          <tr>
+            <td>Visual Rule Builder</td>
+            <td>Drag-and-drop IF-THEN condition builder, no SQL/code</td>
+          </tr>
+          <tr>
+            <td>Campaign Manager</td>
+            <td>Time-bound campaigns with geo filters and multipliers</td>
+          </tr>
+          <tr>
+            <td>Reward Type Manager</td>
+            <td>Define reward categories, expiry, stacking rules</td>
+          </tr>
+          <tr>
+            <td>Badge Manager</td>
+            <td>Create badges, assign criteria, upload icons</td>
+          </tr>
+          <tr>
+            <td>Level Manager</td>
+            <td>Configure level thresholds and perks</td>
+          </tr>
+          <tr>
+            <td>Challenge Manager</td>
+            <td>Create threshold-based challenges with milestone rewards</td>
+          </tr>
+          <tr>
+            <td>Analytics Dashboard</td>
+            <td>Real-time and historical charts, league tables</td>
+          </tr>
+          <tr>
+            <td>Reward Override</td>
+            <td>Manual credit / rejection with reason log</td>
+          </tr>
+          <tr>
+            <td>Audit Trail Viewer</td>
+            <td>Immutable log of all admin actions</td>
+          </tr>
+          <tr>
+            <td>Export Manager</td>
+            <td>CSV/Excel export of any report</td>
+          </tr>
+          <tr>
+            <td>User &amp; Role Management</td>
+            <td>Admin, Super-Admin, Analyst, Client-Admin roles</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="admin-workflow-add-new-parameter">Admin Workflow — Add New Parameter</h2>
+      <div class="seq-diagram">
+        <div class="seq-step">
+          <div class="seq-num">1</div>
+          <div class="seq-content">
+            <div class="seq-title">
+              <span class="seq-actor">Admin</span> <span>Submit Parameter Form</span>
+            </div>
+            <p class="seq-desc">Fills out the new parameter form (code, group, weight, min, max, data_type) via the
+              <strong>Admin Panel UI</strong>.</p>
+          </div>
+        </div>
+        <div class="seq-step">
+          <div class="seq-num">2</div>
+          <div class="seq-content">
+            <div class="seq-title">
+              <span class="seq-actor system">Admin Panel UI</span> <span>POST Request</span>
+            </div>
+            <p class="seq-desc">Submits the payload to <code>POST /admin/parameters</code> on the <strong>Admin
+                API</strong>.</p>
+          </div>
+        </div>
+        <div class="seq-step">
+          <div class="seq-num">3</div>
+          <div class="seq-content">
+            <div class="seq-title">
+              <span class="seq-actor system">Admin API</span> <span>Validation & Persistence</span>
+            </div>
+            <p class="seq-desc">Validates parameter uniqueness and structurally inserts data into
+              <strong>MongoDB</strong> <code>parameters</code> and <code>audit_log</code> tables.</p>
+          </div>
+        </div>
+        <div class="seq-step">
+          <div class="seq-num">4</div>
+          <div class="seq-content">
+            <div class="seq-title">
+              <span class="seq-actor system">Admin API</span> <span>Invalidate Cache</span>
+            </div>
+            <p class="seq-desc">Issues a DEL command to <strong>Redis</strong> to wipe out
+              <code>score_config:{tenantId}</code> and <code>rule_cache:{tenantId}</code>.</p>
+          </div>
+        </div>
+        <div class="seq-step">
+          <div class="seq-num">5</div>
+          <div class="seq-content">
+            <div class="seq-title">
+              <span class="seq-actor system">Admin API</span> <span>Broadcast Config Changed</span>
+            </div>
+            <p class="seq-desc">Emits the <code>config.changed</code> event to the <strong>Score Engine</strong> and
+              <strong>Rule Engine</strong> to force reloading of configurations.</p>
+          </div>
+        </div>
+        <div class="seq-step">
+          <div class="seq-num">6</div>
+          <div class="seq-content">
+            <div class="seq-title">
+              <span class="seq-actor system">Admin API</span> <span>Return Success Status</span>
+            </div>
+            <p class="seq-desc">Returns <code>201 Created</code> to the Admin UI seamlessly. The parameter is instantly
+              available in the tools.</p>
+          </div>
+        </div>
+      </div>
+      <h2 id="admin-workflow-create-rule-visual-builder">Admin Workflow — Create Rule (Visual Builder)</h2>
+      <pre><code>Steps in Rule Builder UI:
+  1. Admin selects parameter from dropdown (auto-populated from DB)
+  2. Admin selects operator (&gt;=, &lt;=, ==, between, in, ...)
+  3. Admin enters threshold value
+  4. Admin adds AND/OR conditions (unlimited nesting)
+  5. Admin selects period (daily/weekly/monthly/event)
+  6. Admin adds geo/client/time filters
+  7. Admin defines action(s): wallet credit/badge/notification/level upgrade
+  8. Admin sets probability (for mystery rewards)
+  9. Admin sets validity dates
+  10. Admin saves → rule stored in DB → cache invalidated → immediately active
+</code></pre>
+      <h2 id="admin-event-system-response-matrix">Admin Event → System Response Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Admin Action</th>
+            <th>System Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Add Parameter</td>
+            <td>Score config cache cleared, rule builder updated, rider UI updated</td>
+          </tr>
+          <tr>
+            <td>Create/Edit Rule</td>
+            <td>Rule cache cleared, active rules reloaded</td>
+          </tr>
+          <tr>
+            <td>Activate Campaign</td>
+            <td>Campaign cache cleared, Rule Engine picks up new campaign</td>
+          </tr>
+          <tr>
+            <td>Override Reward (credit)</td>
+            <td>Rider wallet credited, audit log entry, notification sent</td>
+          </tr>
+          <tr>
+            <td>Reject Reward</td>
+            <td>Status updated, audit log entry, notification with reason</td>
+          </tr>
+          <tr>
+            <td>Change Level Thresholds</td>
+            <td>Next weekly CRON applies new thresholds</td>
+          </tr>
+          <tr>
+            <td>Deactivate Parameter</td>
+            <td>Removed from scoring, removed from rule options</td>
+          </tr>
+        </tbody>
+      </table>
+      <hr>
+      <h1>MODULE 8 — Integration Automation</h1>
+      <h2 id="integration-architecture">Integration Architecture</h2>
+      <div class="mermaid">
+        graph TD
+        subgraph External[&quot;External Systems&quot;]
+        OMS[OMS / Order APIs]
+        IOT[IoT / Battery APIs]
+        HR[HR / Attendance]
+        FIN[Finance / Salary]
+        GEO[Geo / Weather APIs]
+        end
+
+        subgraph EvifyMonolith[&quot;Node.js Monolith API Layer&quot;]
+        AUTH[Auth + Tenant Router]
+        WH[Webhook &amp; Integration Routes]
+
+        OA[OMS Controller]
+        IA[IoT Controller]
+        HA[HR Controller]
+        WA[Weather Controller]
+        end
+
+        subgraph Core[&quot;Core Engine&quot;]
+        PIE[Parameter Ingestion Engine]
+        end
+
+        subgraph Outbound[&quot;Outbound Integrations&quot;]
+        WAL[Wallet Partner APIs]
+        SAL[Salary ERP]
+        FCM[Push Notification - FCM]
+        SMS[SMS - Twilio]
+        end
+
+        OMS --&gt;|REST/Webhook| WH
+        IOT --&gt;|MQTT/REST| WH
+        HR --&gt;|CSV/REST| WH
+        GEO --&gt;|REST| WH
+
+        WH --&gt; AUTH
+        AUTH --&gt; OA &amp; IA &amp; HA &amp; WA
+
+        OA &amp; IA &amp; HA &amp; WA --&gt; PIE
+
+        PIE --&gt; Core
+        Core --&gt; Outbound
+
+      </div>
+      <h2 id="wallet-module-integration">Wallet Module Integration</h2>
+      <pre><code class="language-http">POST /internal/wallet/credit
+Authorization: Bearer {internal-service-token}
+Content-Type: application/json
+
+{
+  &quot;tenant_id&quot;: &quot;uuid&quot;,
+  &quot;rider_id&quot;: &quot;uuid&quot;,
+  &quot;amount&quot;: 50.00,
+  &quot;currency&quot;: &quot;INR&quot;,
+  &quot;description&quot;: &quot;Elite Delivery Bonus - Daily&quot;,
+  &quot;idempotency_key&quot;: &quot;sha256-hash&quot;,
+  &quot;source&quot;: &quot;gamification_engine&quot;,
+  &quot;reference_id&quot;: &quot;rider_reward_uuid&quot;
+}
+</code></pre>
+      <h2 id="iot-battery-api-integration">IoT / Battery API Integration</h2>
+      <pre><code>Battery Adapter subscribes to MQTT topic: evify/iot/{deviceId}/telemetry
+Payload processing:
+  - battery_health_score: derived from charge cycles and capacity
+  - efficient_charging_pct: time charged at optimal range / total charge time
+  - swaps_count: incremented on each swap event
+Each metric normalized and ingested as rider_event
+</code></pre>
+      <h2 id="multi-tenant-webhook-routing">Multi-Tenant Webhook Routing</h2>
+      <pre><code>Incoming webhook URL: https://api.evify.com/webhook/{tenantSlug}/{source}
+  tenantSlug → resolve tenantId from DB
+  source → routes to internal Express controller
+Headers: X-Signature-256: HMAC-SHA256(payload, tenant_secret)
+Signature verified before processing
+</code></pre>
+      <hr>
+      <h1>API STRUCTURE</h1>
+      <h2 id="rider-facing-apis">Rider-Facing APIs</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/rider/me/score?period=daily</code></td>
+            <td>Get rider&#39;s score for a period</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/rider/me/leaderboard?scope=hub</code></td>
+            <td>Get rank and nearby riders</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/rider/me/rewards</code></td>
+            <td>List earned rewards and status</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/rider/me/badges</code></td>
+            <td>List earned badges</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/rider/me/level</code></td>
+            <td>Current level and progress to next</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/rider/me/challenges</code></td>
+            <td>Active challenges and progress</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/rider/me/dashboard</code></td>
+            <td>Aggregated gamification dashboard</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="admin-apis">Admin APIs</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>GET/POST</code></td>
+            <td><code>/admin/parameters</code></td>
+            <td>List / create parameters</td>
+          </tr>
+          <tr>
+            <td><code>PUT/DELETE</code></td>
+            <td><code>/admin/parameters/:id</code></td>
+            <td>Update / delete parameter</td>
+          </tr>
+          <tr>
+            <td><code>GET/POST</code></td>
+            <td><code>/admin/rules</code></td>
+            <td>List / create rule sets</td>
+          </tr>
+          <tr>
+            <td><code>GET/POST</code></td>
+            <td><code>/admin/campaigns</code></td>
+            <td>List / create campaigns</td>
+          </tr>
+          <tr>
+            <td><code>GET/POST</code></td>
+            <td><code>/admin/reward-types</code></td>
+            <td>List / create reward types</td>
+          </tr>
+          <tr>
+            <td><code>GET/POST</code></td>
+            <td><code>/admin/badges</code></td>
+            <td>List / create badges</td>
+          </tr>
+          <tr>
+            <td><code>GET/POST</code></td>
+            <td><code>/admin/challenges</code></td>
+            <td>List / create challenges</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/admin/rewards/:id/approve</code></td>
+            <td>Approve a pending reward</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/admin/rewards/:id/reject</code></td>
+            <td>Reject a reward with reason</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/admin/rewards/override</code></td>
+            <td>Manually credit a reward</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/admin/analytics/leaderboard</code></td>
+            <td>Leaderboard report</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/admin/analytics/rewards</code></td>
+            <td>Reward distribution report</td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/admin/audit-log</code></td>
+            <td>View audit trail (paginated)</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="event-webhook-apis-ingestion">Event Webhook APIs (Ingestion)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/webhook/{tenantSlug}/orders</code></td>
+            <td>Ingest order events</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/webhook/{tenantSlug}/iot</code></td>
+            <td>Ingest IoT/battery telemetry</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/webhook/{tenantSlug}/attendance</code></td>
+            <td>Ingest attendance data</td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/webhook/{tenantSlug}/financial</code></td>
+            <td>Ingest financial events</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="api-response-format">API Response Format</h2>
+      <pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;data&quot;: { },
+  &quot;meta&quot;: {
+    &quot;tenant_id&quot;: &quot;uuid&quot;,
+    &quot;request_id&quot;: &quot;uuid&quot;,
+    &quot;timestamp&quot;: &quot;ISO8601&quot;
+  },
+  &quot;error&quot;: null
+}
+</code></pre>
+      <hr>
+      <h1>REDIS CACHING STRATEGY</h1>
+      <h2 id="cache-key-taxonomy">Cache Key Taxonomy</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Cache Key Pattern</th>
+            <th>TTL</th>
+            <th>Contents</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>score:{tenantId}:{riderId}:daily:{date}</code></td>
+            <td>25h</td>
+            <td>Rider daily score</td>
+          </tr>
+          <tr>
+            <td><code>score:{tenantId}:{riderId}:weekly:{week}</code></td>
+            <td>8d</td>
+            <td>Rider weekly score</td>
+          </tr>
+          <tr>
+            <td><code>score:{tenantId}:{riderId}:monthly:{month}</code></td>
+            <td>32d</td>
+            <td>Rider monthly score</td>
+          </tr>
+          <tr>
+            <td><code>leaderboard:{tenantId}:daily:{date}</code></td>
+            <td>25h</td>
+            <td>Sorted set (score, riderId)</td>
+          </tr>
+          <tr>
+            <td><code>leaderboard:{tenantId}:weekly:{week}</code></td>
+            <td>8d</td>
+            <td>Sorted set</td>
+          </tr>
+          <tr>
+            <td><code>leaderboard:{tenantId}:monthly:{month}</code></td>
+            <td>32d</td>
+            <td>Sorted set</td>
+          </tr>
+          <tr>
+            <td><code>leaderboard:{tenantId}:hub:{hubId}:weekly:{week}</code></td>
+            <td>8d</td>
+            <td>Hub-scoped leaderboard</td>
+          </tr>
+          <tr>
+            <td><code>rule_cache:{tenantId}</code></td>
+            <td>5min</td>
+            <td>JSON array of active rules</td>
+          </tr>
+          <tr>
+            <td><code>score_config:{tenantId}</code></td>
+            <td>10min</td>
+            <td>Parameter weights config</td>
+          </tr>
+          <tr>
+            <td><code>campaign_cache:{tenantId}</code></td>
+            <td>1min</td>
+            <td>Active campaigns</td>
+          </tr>
+          <tr>
+            <td><code>challenge_progress:{riderId}:{challengeId}:{periodKey}</code></td>
+            <td>8d</td>
+            <td>Progress counter</td>
+          </tr>
+          <tr>
+            <td><code>rewarded:{tenantId}:{riderId}:{ruleId}:{periodKey}</code></td>
+            <td>32d</td>
+            <td>Set membership (deduplication)</td>
+          </tr>
+          <tr>
+            <td><code>event_dedup:{tenantId}:{idempotencyKey}</code></td>
+            <td>24h</td>
+            <td>Prevents duplicate ingestion</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="cache-invalidation-strategy">Cache Invalidation Strategy</h2>
+      <pre><code>Config Change Events → immediate invalidation:
+  config.changed → DEL rule_cache:{tenantId}
+  config.changed → DEL score_config:{tenantId}
+  campaign.activated → DEL campaign_cache:{tenantId}
+
+Score updates → overwrite (SET):
+  Score updated → SET score:{...} overwrites previous value
+
+Leaderboard → sorted set ZADD (auto-updates rank):
+  ZADD with NX not needed; just update member score
+</code></pre>
+      <h2 id="redis-cluster-configuration">Redis Cluster Configuration</h2>
+      <pre><code>6 nodes: 3 primary + 3 replicas
+Sharding: consistent hash on key prefix
+Persistence: RDB snapshots every 5 minutes + AOF
+Memory policy: allkeys-lru (evict least recently used)
+Max memory per node: 8 GB
+Cluster mode: Redis Cluster (native sharding)
+Leaderboard sorted sets can hold 100,000+ members efficiently
+</code></pre>
+      <hr>
+      <h1>MULTI-TENANT SAAS ISOLATION</h1>
+      <h2 id="isolation-layers">Isolation Layers</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Isolation Mechanism</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>API</td>
+            <td>JWT claim <code>tenantId</code> required on every request</td>
+          </tr>
+          <tr>
+            <td>Database</td>
+            <td>Separate MongoDB database per tenant: <code>evify_tenant_{slug}</code></td>
+          </tr>
+          <tr>
+            <td>Redis</td>
+            <td>All keys prefixed with <code>{tenantId}:</code></td>
+          </tr>
+          <tr>
+            <td>Background Jobs</td>
+            <td>BullMQ headers include <code>tenant_id</code>; processors filter or group by tenantId</td>
+          </tr>
+          <tr>
+            <td>Notifications</td>
+            <td>FCM topic per-tenant; cannot cross-deliver</td>
+          </tr>
+          <tr>
+            <td>Admin Panel</td>
+            <td>RBAC: admin accounts scoped to single tenant</td>
+          </tr>
+          <tr>
+            <td>Rate Limiting</td>
+            <td>Per-tenant rate limits in API Middleware</td>
+          </tr>
+          <tr>
+            <td>Billing</td>
+            <td>Reward budgets are tenant-isolated</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="tenant-onboarding-automation">Tenant Onboarding Automation</h2>
+      <pre><code>New Tenant Created:
+  1. INSERT into tenants table
+  2. CONNECT to MongoDB and initialize `evify_tenant_{slug}`
+  3. Run migration scripts in new schema
+  4. Seed default parameters, levels, reward types
+  5. Create JWT signing secret for tenant
+  6. Provision Redis namespace
+  7. Send welcome email to tenant admin
+  → Fully automated, no developer action required
+</code></pre>
+      <hr>
+      <h1>SCALING STRATEGY</h1>
+      <h2 id="horizontal-scaling-plan">Horizontal Scaling Plan</h2>
+      <pre><code>Component              Scaling Strategy
+─────────────────────────────────────────────────
+Node.js Monolith API → Horizontal scaling behind Load Balancer (ELB/ALB)
+                     → PM2 Cluster mode for multi-core utilization
+                     → Stateful connections stored in Redis
+Background Jobs      → Horizontal, add more generic BullMQ worker dynos/pods
+Leaderboard Service  → Built-in to Monolith, Redis ZADD is O(log N)
+Admin API            → Handled by Monolith, stateless
+MongoDB              → Replica Set / Sharded by tenant_id, connection pooling
+Redis                → Redis Cluster (horizontal sharding)
+Kubernetes           → HPA (Horizontal Pod Autoscaler) on CPU/memory
+</code></pre>
+      <h2 id="performance-targets">Performance Targets</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Target</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Event ingestion throughput</td>
+            <td>10,000 events/second</td>
+          </tr>
+          <tr>
+            <td>Score computation latency</td>
+            <td>&lt; 200ms per rider</td>
+          </tr>
+          <tr>
+            <td>Rule evaluation latency</td>
+            <td>&lt; 100ms per rule set</td>
+          </tr>
+          <tr>
+            <td>Leaderboard rank query</td>
+            <td>&lt; 10ms (Redis O(log N))</td>
+          </tr>
+          <tr>
+            <td>Reward credit end-to-end</td>
+            <td>&lt; 2 seconds</td>
+          </tr>
+          <tr>
+            <td>Dashboard load time</td>
+            <td>&lt; 500ms (Redis cache hit)</td>
+          </tr>
+          <tr>
+            <td>Max concurrent riders</td>
+            <td>100,000+</td>
+          </tr>
+          <tr>
+            <td>Max parameters per tenant</td>
+            <td>500+</td>
+          </tr>
+        </tbody>
+      </table>
+      <hr>
+      <h1>EDGE-CASE HANDLING</h1>
+      <h2 id="1-fraud-detection">1. Fraud Detection</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Scenario</th>
+            <th>Handling</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Unusually high order count in &lt;1h</td>
+            <td>Flag event, apply statistical anomaly Z-score check</td>
+          </tr>
+          <tr>
+            <td>Same geo coordinates for all deliveries</td>
+            <td>Geofence validation on order events</td>
+          </tr>
+          <tr>
+            <td>Repeated reward triggers in rapid succession</td>
+            <td>Rate limiting + idempotency key</td>
+          </tr>
+          <tr>
+            <td>Third-party API data manipulation</td>
+            <td>HMAC signature verification on all webhooks</td>
+          </tr>
+          <tr>
+            <td>Admin self-awarding rewards</td>
+            <td>Admin cannot approve own rider&#39;s overrides; dual approval required</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="2-duplicate-reward-prevention">2. Duplicate Reward Prevention</h2>
+      <pre><code>3-layer defense:
+  Layer 1: Redis SET check before DB write (&lt; 1ms)
+  Layer 2: DB UNIQUE constraint on idempotency_key
+  Layer 3: Wallet API idempotency header (X-Idempotency-Key)
+  
+If all 3 layers pass → safe to credit
+If any layer blocks → log, skip, no duplicate
+</code></pre>
+      <h2 id="3-rule-conflict-resolution">3. Rule Conflict Resolution</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Conflict Type</th>
+            <th>Resolution</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Two non-stackable rules match</td>
+            <td>Evaluate priority field; lowest number wins</td>
+          </tr>
+          <tr>
+            <td>Two campaigns overlap</td>
+            <td>If exclusive: higher priority wins; if stackable: both apply</td>
+          </tr>
+          <tr>
+            <td>Rule validity window expired mid-day</td>
+            <td>Validated at trigger time; expired rules skipped</td>
+          </tr>
+          <tr>
+            <td>Parameter deleted mid-rule</td>
+            <td>Rule engine skips conditions referencing inactive parameter, logs warning</td>
+          </tr>
+          <tr>
+            <td>Score recalculation race condition</td>
+            <td>Redis SETNX lock on rider score computation; one process wins</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="4-rule-engine-failure-handling">4. Rule Engine Failure Handling</h2>
+      <pre><code>If Rule Engine crashes mid-evaluation:
+  - If triggered via Webhook API: Returns HTTP 500, Client/OMS implements exponential backoff retry.
+  - If triggered via internal Job Queue: BullMQ jobs survive Redis persistence (AOF). Failed jobs moved to Dead Letter Queue (DLQ).
+  - Alert: Slack/PagerDuty on DLQ growth &gt; 100 items
+</code></pre>
+      <h2 id="5-clock-skew-timezone-handling">5. Clock Skew / Timezone Handling</h2>
+      <pre><code>All events stored in UTC
+session_date computed using rider&#39;s local timezone (stored in riders.metadata)
+Daily score windows: 00:00 to 23:59 in rider&#39;s local timezone
+Cross-midnight deliveries: attributed to the calendar day of order_accepted_at
+</code></pre>
+      <hr>
+      <h1>EXAMPLE DATA FLOWS</h1>
+      <h2 id="flow-1-daily-challenge-quot15-orders-challengequot">Flow 1 — Daily Challenge: &quot;15 Orders
+        Challenge&quot;</h2>
+      <pre><code>09:00 AM — Rider completes order #15 of the day
+  │
+  ▼
+OMS API → POST /webhook/{tenant}/orders
+  payload: { rider_id, order_id, status: &quot;delivered&quot;, timestamp }
+  │
+  ▼
+Ingestion Engine:
+  - Validate HMAC signature
+  - Resolve parameter: orders_completed (code: &quot;orders_completed&quot;)
+  - Insert rider_event (value: 1, event_time: 09:00)
+  - Publish rider.event.ingested
+  │
+  ▼
+Score Engine:
+  - Aggregate today&#39;s orders_completed = 15
+  - Recalculate daily_score = ... (weighted)
+  - UPSERT rider_scores daily record
+  - ZADD leaderboard key
+  - Publish rider.score.updated
+  │
+  ▼
+Rule Engine:
+  - Load rule: &quot;IF orders_completed &gt;= 15 → ₹50 bonus&quot;  
+  - Check: 15 &gt;= 15 ✅
+  - Check geo filter: rider city ∈ allowed cities ✅
+  - Publish rule.matched
+  │
+  ▼
+Reward Distribution:
+  - Generate idempotency_key
+  - Redis check → NOT EXISTS ✅
+  - Insert rider_rewards (status: pending)
+  - Call Wallet API → credit ₹50
+  - Update status: credited
+  - Insert audit_log
+  - Send push: &quot;🎉 You completed 15 orders! ₹50 credited.&quot;
+  │
+Challenge Service:
+  - Daily challenge threshold = 15 → COMPLETED ✅
+  - Mark rider_challenge_progress.completed = true
+  - Send progress notification
+  
+Total latency: &lt; 3 seconds end-to-end
+</code></pre>
+      <hr>
+      <h2 id="flow-2-battery-care-streak-reward">Flow 2 — Battery Care Streak Reward</h2>
+      <pre><code>7-day streak: Rider charges battery optimally every day
+
+Day 1–6: Ingestion → score_engine updates battery_health_score daily
+Day 7:
+  IoT device → POST /webhook/{tenant}/iot
+  payload: { device_id, battery_health: 95, charge_cycle: efficient }
+  │
+  ▼
+IoT Adapter → normalize → rider_event (parameter: battery_health_score, value: 95)
+  │
+  ▼
+Rule Engine evaluates:
+  Rule: &quot;IF rolling_7d_avg(battery_health_score) &gt;= 90 → ₹100 Battery Care Reward&quot;
+  - Compute 7-day rolling average: COALESCE from rider_scores + Redis
+  - 7-day avg = 93 &gt;= 90 ✅
+  - Rule action: wallet_credit ₹100 + badge: &quot;Battery Guardian&quot;
+  │
+  ▼
+Reward Distribution:
+  - Wallet credited ₹100
+  - rider_badges record inserted
+  - Notification: &quot;🔋 You&#39;re a Battery Guardian! ₹100 credited.&quot;
+</code></pre>
+      <hr>
+      <h2 id="flow-3-sla-gold-badge">Flow 3 — SLA Gold Badge</h2>
+      <pre><code>Weekly evaluation (CRON: Monday 00:01)
+  │
+  ▼
+Score Engine: Compute weekly scores for all riders
+  │
+  ▼
+Rule Engine evaluates weekly SLA badge rules:
+  Rule: &quot;IF on_time_delivery_pct (weekly_avg) &gt;= 98% 
+         AND orders_completed (weekly_sum) &gt;= 80 
+         → award SLA Gold Badge&quot;
+  
+For rider Pradeep:
+  - on_time_delivery_pct weekly avg = 99.1% ✅
+  - orders_completed weekly sum = 87 ✅
+  - All conditions met → publish rule.matched (action: badge)
+  │
+  ▼
+Reward Distribution:
+  - INSERT rider_badges (badge_code: sla_gold, period_key: 2025-W04)
+  - Notification: &quot;🏅 You&#39;ve earned the SLA Gold Badge this week!&quot;
+  - rider_scores rank updated → may trigger level upgrade
+</code></pre>
+      <hr>
+      <h2 id="flow-4-festival-campaign-diwali">Flow 4 — Festival Campaign (Diwali)</h2>
+      <pre><code>Admin activates &quot;Diwali Super Bonus&quot; campaign Oct 20, start_time passes
+  │
+  ▼
+Campaign Engine:
+  - Detects campaign.activated event
+  - Cache update: campaign_cache:{tenantId} refreshed
+  │
+October 24, 9:00 PM — Rider completes order in Mumbai
+  │
+  ▼
+Ingestion → Score Engine (standard flow)
+  │
+  ▼
+Rule Engine evaluates:
+  Base rule: &quot;IF orders &gt;= 10 → ₹50 bonus&quot;
+  Active campaign: Diwali (multiplier: 2.0, geo: Mumbai ✅, time: active ✅, stackable: true)
+  
+Final reward: ₹50 × 2.0 = ₹100 wallet credit
+  │
+  ▼
+Reward Distribution:
+  - idempotency_key generated with campaign_id suffix (allows stacking distinct triggers)
+  - Wallet API credited ₹100
+  - Notification: &quot;🪔 Diwali Bonus! ₹100 credited to your wallet.&quot;
+  
+Campaign expires Nov 5 23:59:
+  - CRON job deactivates campaign, clears campaign cache
+  - Base rule resumes at normal rate
+</code></pre>
+      <hr>
+      <h1>ANALYTICS &amp; REPORT AUTOMATION</h1>
+      <h2 id="auto-generated-reports">Auto-Generated Reports</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Report</th>
+            <th>Dimensions</th>
+            <th>Refresh</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Challenge Participation</td>
+            <td>By challenge, date, hub, city</td>
+            <td>Daily</td>
+          </tr>
+          <tr>
+            <td>Reward Distribution</td>
+            <td>By reward type, period, rider segment</td>
+            <td>Daily</td>
+          </tr>
+          <tr>
+            <td>Leaderboard Summary</td>
+            <td>By hub, franchise, city, week/month</td>
+            <td>Weekly</td>
+          </tr>
+          <tr>
+            <td>Churn vs Reward Correlation</td>
+            <td>Rider cohorts, reward frequency</td>
+            <td>Weekly</td>
+          </tr>
+          <tr>
+            <td>Rider Efficiency Score</td>
+            <td>Top/bottom performers by city</td>
+            <td>Daily</td>
+          </tr>
+          <tr>
+            <td>Battery Stress vs Behavior</td>
+            <td>battery_health vs orders</td>
+            <td>Daily</td>
+          </tr>
+          <tr>
+            <td>Revenue Loss Prediction</td>
+            <td>Cancellations, SLA breaches</td>
+            <td>Weekly</td>
+          </tr>
+          <tr>
+            <td>Franchise League Table</td>
+            <td>Franchise score rankings</td>
+            <td>Monthly</td>
+          </tr>
+          <tr>
+            <td>ESG / CO₂ Savings</td>
+            <td>km driven, battery efficiency</td>
+            <td>Monthly</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="report-pipeline">Report Pipeline</h2>
+      <pre><code>CRON triggers → Analytics Engine
+  → Query MongoDB (read preference: secondary)
+  → Aggregate + transform
+  → Store result in Local Storage (Parquet/CSV)
+  → Update analytics_reports table with metadata
+  → Admin dashboard widget calls /admin/analytics/report/{type}?date=...
+</code></pre>
+      <hr>
+      <h1>FUTURE-READY CAPABILITIES</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Design Approach</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>AI Personalized Rewards</strong></td>
+            <td>Feature store per rider, ML model plugs into rule action evaluator</td>
+          </tr>
+          <tr>
+            <td><strong>Weather-Triggered Incentives</strong></td>
+            <td>Weather adapter webhook already designed (Module 8)</td>
+          </tr>
+          <tr>
+            <td><strong>Rider Wellness Scoring</strong></td>
+            <td>New parameter group: Wellness; wellness_score parameter</td>
+          </tr>
+          <tr>
+            <td><strong>Mentorship Rewards</strong></td>
+            <td>New parameter: mentees_onboarded; standard rule engine evaluates it</td>
+          </tr>
+          <tr>
+            <td><strong>Reward Marketplace</strong></td>
+            <td>Voucher reward type expanded to external redemption API</td>
+          </tr>
+          <tr>
+            <td><strong>BNPL Credit Scoring</strong></td>
+            <td>financial_discipline parameter group feeds credit score derived parameter</td>
+          </tr>
+          <tr>
+            <td><strong>V2G Incentive Modeling</strong></td>
+            <td>IoT adapter extended for vehicle grid data; parameter group: v2g</td>
+          </tr>
+          <tr>
+            <td><strong>Multiplayer Team Rewards</strong></td>
+            <td>Team entity table; team_score derived from member scores</td>
+          </tr>
+        </tbody>
+      </table>
+      <blockquote>
+        <p>All future capabilities require <strong>zero architectural redesign</strong> — they extend existing
+          parameter, rule, reward type, or integration adapter configurations.</p>
+      </blockquote>
+
+    </main>
+  </div>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { primaryColor: '#6c63ff', primaryTextColor: '#e2e8f0', primaryBorderColor: '#2e3250', lineColor: '#6c63ff', secondaryColor: '#1a1d27', tertiaryColor: '#22263a', background: '#1a1d27', mainBkg: '#22263a', fontFamily: 'Inter, sans-serif' } });
+    hljs.highlightAll();
+  </script>
+</body>
+
+</html>

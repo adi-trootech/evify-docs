@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evify — MongoDB Schema Design</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --text: #e2e8f0;
+      --text-muted: #8892a4;
+      --code-bg: #161b22;
+      --table-head: #1e2236;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.75;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      min-width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 28px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar .logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .sidebar .doc-title {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .nav-section a {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 5px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.82rem;
+      transition: all 0.2s;
+    }
+
+    .nav-section a:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .nav-files {
+      margin-top: 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .nav-files-title {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      padding: 0 8px;
+    }
+
+    .nav-files a {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 5px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.78rem;
+      transition: all 0.2s;
+    }
+
+    .nav-files a:hover {
+      color: var(--accent2);
+    }
+
+    .nav-files a.current {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .main {
+      flex: 1;
+      padding: 44px 52px;
+      max-width: 1080px;
+    }
+
+    .doc-header {
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.15) 0%, rgba(0, 212, 170, 0.08) 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 32px 36px;
+      margin-bottom: 44px;
+    }
+
+    .doc-header .badge {
+      display: inline-block;
+      background: rgba(108, 99, 255, 0.2);
+      color: var(--accent);
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+
+    .doc-header h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .doc-header p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 36px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 1.25rem;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent2);
+      margin: 22px 0 8px;
+    }
+
+    .coll-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 28px 0 8px;
+    }
+
+    .coll-label .coll-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .coll-label .coll-tag {
+      background: rgba(0, 212, 170, 0.12);
+      color: var(--accent2);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    p {
+      color: var(--text);
+      margin-bottom: 12px;
+      font-size: 0.92rem;
+    }
+
+    .mermaid-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 16px 0;
+      overflow-x: auto;
+      text-align: center;
+    }
+
+    pre {
+      background: var(--code-bg) !important;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      overflow-x: auto;
+      margin: 10px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.79rem;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84em;
+    }
+
+    :not(pre)>code {
+      background: rgba(108, 99, 255, 0.12);
+      color: var(--accent2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 14px 0;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr {
+      background: var(--table-head);
+    }
+
+    thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--surface2);
+    }
+
+    tbody td {
+      padding: 9px 14px;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    blockquote {
+      border-left: 3px solid var(--accent);
+      background: rgba(108, 99, 255, 0.08);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 0.88rem;
+    }
+
+    strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    ul {
+      padding-left: 22px;
+      margin-bottom: 12px;
+    }
+
+    li {
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    @media(max-width:768px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        padding: 22px 18px;
+      }
+    }
+
+    /* ER Diagram Styles */
+    .er-diagram {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px;
+      margin: 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .er-row {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .er-group {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .er-group-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      text-align: center;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .er-entity {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: #fff;
+      transition: transform 0.2s, border-left-color 0.2s;
+    }
+
+    .er-entity:hover {
+      transform: translateY(-2px);
+      border-left-color: var(--accent2);
+    }
+
+    .er-entity.purple {
+      border-left-color: #d946ef;
+    }
+
+    .er-entity.green {
+      border-left-color: var(--accent2);
+    }
+
+    .er-entity.orange {
+      border-left-color: #f59e0b;
+    }
+
+    .er-entity.blue {
+      border-left-color: #38bdf8;
+    }
+
+    .er-rel {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .er-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .er-connector::after {
+      content: '↕ 1 : N Relationships ↕';
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="logo">⚡ Evify</div>
+      <div class="doc-title">Gamification Engine</div>
+      <div class="nav-section">
+        <a href="#schema-strategy">Schema Strategy</a>
+        <a href="#entity-relationship-overview">Entity Relationship Overview</a>
+
+        <a href="#tenant-collections-evifytenantslug-databases">Tenant Collections (evify_tenant
+          databases)</a>
+        <a href="#riders">&nbsp;&nbsp;▹ riders</a>
+        <a href="#parametergroups">&nbsp;&nbsp;▹ parameter_groups</a>
+        <a href="#parameters-core-of-no-code-extensibility">&nbsp;&nbsp;▹ parameters ← Core of no-code extensibility</a>
+        <a href="#riderevents-raw-ingested-data">&nbsp;&nbsp;▹ rider_events ← Raw ingested data</a>
+        <a href="#riderscores-computed-aggregated-scores">&nbsp;&nbsp;▹ rider_scores ← Computed aggregated scores</a>
+        <a href="#rulesets-for-json-rules-engine">&nbsp;&nbsp;▹ rule_sets (For json-rules-engine)</a>
+        <a href="#campaigns">&nbsp;&nbsp;▹ campaigns</a>
+        <a href="#rewardtypes">&nbsp;&nbsp;▹ reward_types</a>
+        <a href="#riderrewards-reward-ledger">&nbsp;&nbsp;▹ rider_rewards ← Reward ledger</a>
+        <a href="#badges">&nbsp;&nbsp;▹ badges</a>
+        <a href="#riderbadges">&nbsp;&nbsp;▹ rider_badges</a>
+        <a href="#riderlevels">&nbsp;&nbsp;▹ rider_levels</a>
+        <a href="#challenges">&nbsp;&nbsp;▹ challenges</a>
+        <a href="#riderchallengeprogress">&nbsp;&nbsp;▹ rider_challenge_progress</a>
+        <a href="#leaderboardsnapshots">&nbsp;&nbsp;▹ leaderboard_snapshots</a>
+        <a href="#notificationtemplates">&nbsp;&nbsp;▹ notification_templates</a>
+        <a href="#auditlog">&nbsp;&nbsp;▹ audit_log</a>
+        <a href="#index-strategy-summary">Index Strategy Summary</a>
+      </div>
+      <div class="nav-files">
+        <div class="nav-files-title">All Documents</div>
+        <a href="01_system_architecture.html">01 · System Architecture</a>
+        <a href="02_database_schema.html" class="current">02 · Database Schema</a>
+        <a href="03_modules_1_to_6.html">03 · Modules 1–6</a>
+        <a href="04_modules_7_8_infra_flows.html">04 · Infra &amp; Flows</a>
+      </div>
+    </nav>
+    <main class="main">
+      <h1>Evify Gamification Engine — Database Schema Design (MongoDB)</h1>
+      <h2 id="schema-strategy">Schema Strategy</h2>
+      <ul>
+        <li><strong>MongoDB</strong> (Primary Store): Multi-database architecture, one database per tenant.</li>
+        <li><strong>Tenant databases</strong>: Named <code>evify_tenant</code> (e.g.,
+          <code>evify_tenant_zomato</code>).
+        </li>
+        <li><strong>Global database</strong>: Named <code>evify_global</code> for storing tenant directory and global
+          configurations.</li>
+        <li>Schema enforcement via <strong>Mongoose</strong> (or similar ODM) at the application layer.</li>
+      </ul>
+      <hr>
+      <h2 id="entity-relationship-overview">Entity Relationship Overview</h2>
+      <div class="er-diagram">
+        <div class="er-row">
+          <div class="er-group">
+            <div class="er-group-title">SaaS & Configuration (evify_global / Admin)</div>
+            <div class="er-entity purple">
+              <span>TENANTS</span>
+              <span class="er-rel">1:N ▹ Riders, Campaigns</span>
+            </div>
+            <div class="er-entity purple">
+              <span>PARAMETER_GROUPS</span>
+              <span class="er-rel">owns</span>
+            </div>
+            <div class="er-entity purple">
+              <span>PARAMETERS</span>
+              <span class="er-rel">1:N ▹ Events</span>
+            </div>
+          </div>
+
+          <div class="er-group">
+            <div class="er-group-title">Gamification Logic (Admin / Core Engine)</div>
+            <div class="er-entity blue">
+              <span>CAMPAIGNS</span>
+              <span class="er-rel">1:N ▹ Rule Sets</span>
+            </div>
+            <div class="er-entity blue">
+              <span>RULE_SETS</span>
+              <span class="er-rel">triggers Rewards</span>
+            </div>
+            <div class="er-entity blue">
+              <span>CHALLENGES</span>
+              <span class="er-rel">drives Progress</span>
+            </div>
+            <div class="er-entity blue">
+              <span>REWARD_TYPES</span>
+              <span class="er-rel">classifies Rewards</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="er-connector"></div>
+
+        <div class="er-row">
+          <div class="er-group">
+            <div class="er-group-title">Rider State & Ingestion (evify_tenant)</div>
+            <div class="er-entity">
+              <span>RIDERS</span>
+              <span class="er-rel">Core Entity</span>
+            </div>
+            <div class="er-entity">
+              <span>RIDER_EVENTS</span>
+              <span class="er-rel">generated from OMS/IoT</span>
+            </div>
+            <div class="er-entity">
+              <span>RIDER_SCORES</span>
+              <span class="er-rel">computed daily/weekly</span>
+            </div>
+            <div class="er-entity">
+              <span>LEADERBOARD_SNAPSHOTS</span>
+              <span class="er-rel">ranks Riders</span>
+            </div>
+          </div>
+
+          <div class="er-group">
+            <div class="er-group-title">Rewards, Badges & Progress Ledger</div>
+            <div class="er-entity orange">
+              <span>RIDER_REWARDS</span>
+              <span class="er-rel">idempotent ledger</span>
+            </div>
+            <div class="er-entity orange">
+              <span>RIDER_BADGES</span>
+              <span class="er-rel">unlocked achievements</span>
+            </div>
+            <div class="er-entity orange">
+              <span>RIDER_CHALLENGE_PROGRESS</span>
+              <span class="er-rel">tracked vs Milestones</span>
+            </div>
+            <div class="er-entity orange">
+              <span>RIDER_LEVELS</span>
+              <span class="er-rel">reached via Scores</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr>
+
+      <h2 id="tenant-collections-evifytenantslug-databases">Tenant Collections (<code>evify_tenant</code>
+        databases)</h2>
+      <h3 id="riders"><code>riders</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;external_id&quot;: &quot;EMP-12345&quot;,
+  &quot;name&quot;: &quot;Pradeep Kumar&quot;,
+  &quot;phone&quot;: &quot;+919876543210&quot;,
+  &quot;email&quot;: &quot;pradeep.k@zomato.rider.com&quot;,
+  &quot;city&quot;: &quot;Mumbai&quot;,
+  &quot;hub_id&quot;: &quot;ObjectId&quot;,
+  &quot;franchise_id&quot;: &quot;ObjectId&quot;,
+  &quot;geo_zone&quot;: &quot;Andheri West&quot;,
+  &quot;joined_at&quot;: &quot;ISODate&quot;,
+  &quot;is_active&quot;: true,
+  &quot;rider_total_score&quot;: 12500.5,
+  &quot;metadata&quot;: {
+    &quot;vehicle_type&quot;: &quot;EV_Bike&quot;,
+    &quot;battery_model&quot;: &quot;Volt_v2&quot;
+  },
+  &quot;createdAt&quot;: &quot;ISODate&quot;,
+  &quot;updatedAt&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <p><em>Indexes: <code>external_id</code> (Unique), <code>hub_id</code>, <code>city</code></em></p>
+      <hr>
+      <h3 id="parametergroups"><code>parameter_groups</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;name&quot;: &quot;Operations&quot;,
+  &quot;description&quot;: &quot;Delivery metrics and order counts&quot;,
+  &quot;is_active&quot;: true,
+  &quot;display_order&quot;: 1,
+  &quot;createdAt&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <hr>
+      <h3 id="parameters-core-of-no-code-extensibility"><code>parameters</code> ← Core of no-code extensibility</h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;group_id&quot;: &quot;ObjectId&quot;,
+  &quot;code&quot;: &quot;orders_completed&quot;,
+  &quot;name&quot;: &quot;Orders Completed&quot;,
+  &quot;description&quot;: &quot;Total successful deliveries&quot;,
+  &quot;data_type&quot;: &quot;number&quot;,
+  &quot;unit&quot;: &quot;orders&quot;,
+  &quot;weight&quot;: 1.5,
+  &quot;min_value&quot;: 0,
+  &quot;max_value&quot;: 100,
+  &quot;aggregation&quot;: &quot;sum&quot;,
+  &quot;window_type&quot;: &quot;daily&quot;,
+  &quot;source_type&quot;: &quot;api&quot;,
+  &quot;is_active&quot;: true,
+  &quot;show_on_rider_ui&quot;: true,
+  &quot;version&quot;: 1,
+  &quot;createdAt&quot;: &quot;ISODate&quot;,
+  &quot;updatedAt&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <p><em>Indexes: <code>code</code> (Unique), <code>group_id</code></em></p>
+      <p><strong>What does <code>weight</code> mean in parameters?</strong>
+        <br>
+        The <code>weight</code> represents the point multiplier or dynamic value importance for this metric. When an
+        event fires, its value is multiplied by the parameter's <code>weight</code> to compute the final score for that
+        action. This allows non-technical administrators to tweak how many points an action yields directly from the
+        database (no-code), overriding baseline hardcoded logic.
+      </p>
+      <blockquote>
+        <p><strong>Key insight</strong>: Adding a new document here auto-activates it in Rule Builder, Score Engine, and
+          Rider Dashboard — no code deployment needed.</p>
+      </blockquote>
+      <hr>
+      <h3 id="riderevents-raw-ingested-data"><code>rider_events</code> ← Raw ingested data</h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;rider_id&quot;: &quot;ObjectId&quot;,
+  &quot;parameter_id&quot;: &quot;ObjectId&quot;,
+  &quot;parameter_code&quot;: &quot;orders_completed&quot;,
+  &quot;value&quot;: 1.0,
+  &quot;event_time&quot;: &quot;ISODate&quot;,
+  &quot;source&quot;: &quot;oms_webhook&quot;,
+  &quot;session_date&quot;: &quot;2025-02-23&quot;, 
+  &quot;raw_payload&quot;: {
+    &quot;order_id&quot;: &quot;ORD-9988&quot;,
+    &quot;distance_km&quot;: 4.2
+  },
+  &quot;event_score&quot;: 1.5,
+  &quot;newrider_event_score&quot;: 2.0,
+  &quot;is_valid&quot;: true,
+  &quot;processed&quot;: true,
+  &quot;createdAt&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <p><em>Indexes: <code>{ rider_id: 1, session_date: 1 }</code> (Speed up score computation),
+          <code>{ parameter_id: 1, session_date: 1 }</code>, <code>{ processed: 1 }</code></em></p>
+      <hr>
+      <h3 id="riderscores-computed-aggregated-scores"><code>rider_scores</code> ← Computed aggregated scores</h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;rider_id&quot;: &quot;ObjectId&quot;,
+  &quot;score_date&quot;: &quot;ISODate&quot;,
+  &quot;period&quot;: &quot;daily&quot;,
+  &quot;period_key&quot;: &quot;2025-02-23&quot;,
+  &quot;total_score&quot;: 85.4,
+  &quot;parameter_scores&quot;: {
+    &quot;orders_completed&quot;: 45.0,
+    &quot;on_time_delivery_pct&quot;: 40.4
+  },
+  &quot;level&quot;: &quot;Gold&quot;,
+  &quot;rank&quot;: 42,
+  &quot;hub_rank&quot;: 12,
+  &quot;franchise_rank&quot;: 2,
+  &quot;city_rank&quot;: 89,
+  &quot;calculated_at&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <p><em>Indexes: <code>{ rider_id: 1, period: 1, period_key: 1 }</code> (Unique),
+          <code>{ period: 1, period_key: 1, total_score: -1 }</code> (Leaderboards)</em></p>
+      <hr>
+      <h3 id="rulesets-for-json-rules-engine"><code>rule_sets</code> (For json-rules-engine)</h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;campaign_id&quot;: &quot;ObjectId(Nullable)&quot;,
+  &quot;name&quot;: &quot;Elite Delivery Bonus&quot;,
+  &quot;description&quot;: &quot;Bonus for 15+ orders with 95% SLA&quot;,
+  &quot;conditions&quot;: {
+    &quot;all&quot;: [
+      { &quot;fact&quot;: &quot;orders_completed&quot;, &quot;operator&quot;: &quot;greaterThanInclusive&quot;, &quot;value&quot;: 15 },
+      { &quot;fact&quot;: &quot;on_time_delivery_pct&quot;, &quot;operator&quot;: &quot;greaterThanInclusive&quot;, &quot;value&quot;: 95 }
+    ]
+  },
+  &quot;event_action&quot;: {
+    &quot;type&quot;: &quot;reward_triggered&quot;,
+    &quot;params&quot;: {
+      &quot;actions&quot;: [
+        { &quot;type&quot;: &quot;wallet_credit&quot;, &quot;value&quot;: 50 }
+      ]
+    }
+  },
+  &quot;period&quot;: &quot;daily&quot;,
+  &quot;geo_filter&quot;: {
+    &quot;cities&quot;: [&quot;Mumbai&quot;],
+    &quot;hubs&quot;: []
+  },
+  &quot;valid_from&quot;: &quot;ISODate&quot;,
+  &quot;valid_to&quot;: &quot;ISODate&quot;,
+  &quot;priority&quot;: 10,
+  &quot;is_stackable&quot;: false,
+  &quot;is_active&quot;: true,
+  &quot;version&quot;: 1,
+  &quot;created_by&quot;: &quot;ObjectId&quot;,
+  &quot;createdAt&quot;: &quot;ISODate&quot;,
+  &quot;updatedAt&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <p><em>Indexes: <code>{ is_active: 1, valid_from: 1, valid_to: 1 }</code></em></p>
+      <blockquote>
+        <p><strong>Key insight</strong>: Rule conditions and actions are directly serialized into the
+          <code>conditions</code> and <code>event_action</code> objects. This allows the backend to feed records
+          straight into <code>json-rules-engine</code> without performing complex normalized JOINs.
+        </p>
+      </blockquote>
+      <hr>
+      <h3 id="campaigns"><code>campaigns</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;name&quot;: &quot;Diwali Super Bonus&quot;,
+  &quot;type&quot;: &quot;festival&quot;,
+  &quot;description&quot;: &quot;Double rewards during Diwali week&quot;,
+  &quot;start_time&quot;: &quot;ISODate&quot;,
+  &quot;end_time&quot;: &quot;ISODate&quot;,
+  &quot;geo_zones&quot;: [&quot;Mumbai&quot;, &quot;Delhi&quot;],
+  &quot;multiplier&quot;: 2.0,
+  &quot;override_base&quot;: false,
+  &quot;is_stackable&quot;: true,
+  &quot;is_exclusive&quot;: false,
+  &quot;priority&quot;: 50,
+  &quot;is_active&quot;: true,
+  &quot;config&quot;: {},
+  &quot;created_by&quot;: &quot;ObjectId&quot;,
+  &quot;createdAt&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <p><em>Indexes: <code>{ is_active: 1, start_time: 1, end_time: 1 }</code></em></p>
+      <hr>
+      <h3 id="rewardtypes"><code>reward_types</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;code&quot;: &quot;wallet_credit_inr&quot;,
+  &quot;name&quot;: &quot;Cash Wallet Credit (INR)&quot;,
+  &quot;category&quot;: &quot;monetary&quot;,
+  &quot;description&quot;: &quot;Direct credit to rider partner app wallet&quot;,
+  &quot;is_stackable&quot;: true,
+  &quot;expiry_days&quot;: null,
+  &quot;config&quot;: {},
+  &quot;is_active&quot;: true,
+  &quot;createdAt&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <hr>
+      <h3 id="riderrewards-reward-ledger"><code>rider_rewards</code> ← Reward ledger</h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;rider_id&quot;: &quot;ObjectId&quot;,
+  &quot;rule_set_id&quot;: &quot;ObjectId&quot;,
+  &quot;campaign_id&quot;: &quot;ObjectId&quot;,
+  &quot;reward_type_id&quot;: &quot;ObjectId&quot;,
+  &quot;reward_value&quot;: 50.00,
+  &quot;reward_meta&quot;: { &quot;currency&quot;: &quot;INR&quot; },
+  &quot;status&quot;: &quot;pending&quot;,
+  &quot;idempotency_key&quot;: &quot;cf83e135...sha256&quot;,
+  &quot;trigger_event&quot;: &quot;daily_score&quot;,
+  &quot;trigger_period&quot;: &quot;2025-02-23&quot;,
+  &quot;issued_at&quot;: &quot;ISODate&quot;,
+  &quot;expires_at&quot;: &quot;ISODate(Nullable)&quot;,
+  &quot;credited_at&quot;: &quot;ISODate(Nullable)&quot;,
+  &quot;wallet_ref&quot;: &quot;TXN-98765&quot;,
+  &quot;createdAt&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <p><em>Indexes: <code>idempotency_key</code> (Unique), <code>{ rider_id: 1, status: 1 }</code>,
+          <code>{ status: 1 }</code></em></p>
+      <hr>
+      <h3 id="badges"><code>badges</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;code&quot;: &quot;sla_gold&quot;,
+  &quot;name&quot;: &quot;SLA Gold Badge&quot;,
+  &quot;description&quot;: &quot;Maintained 99% SLA for a week&quot;,
+  &quot;icon_url&quot;: &quot;https://storage.evify.com/badges/gold_sla.png&quot;,
+  &quot;category&quot;: &quot;performance&quot;,
+  &quot;criteria&quot;: { &quot;rule_ref&quot;: &quot;ObjectId&quot; },
+  &quot;is_active&quot;: true,
+  &quot;createdAt&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <hr>
+      <h3 id="riderbadges"><code>rider_badges</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;rider_id&quot;: &quot;ObjectId&quot;,
+  &quot;badge_id&quot;: &quot;ObjectId&quot;,
+  &quot;earned_at&quot;: &quot;ISODate&quot;,
+  &quot;period_key&quot;: &quot;2025-W08&quot;
+}
+</code></pre>
+      <p><em>Indexes: <code>{ rider_id: 1, badge_id: 1, period_key: 1 }</code> (Unique)</em></p>
+      <hr>
+      <h3 id="riderlevels"><code>rider_levels</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;code&quot;: &quot;platinum&quot;,
+  &quot;name&quot;: &quot;Platinum Tier&quot;,
+  &quot;min_score&quot;: 80.0,
+  &quot;max_score&quot;: 100.0,
+  &quot;color&quot;: &quot;#e5e4e2&quot;,
+  &quot;icon_url&quot;: &quot;https://storage.evify.com/levels/platinum.png&quot;,
+  &quot;perks&quot;: [
+    &quot;Priority Support&quot;,
+    &quot;+5% Wallet Multiplier&quot;
+  ],
+  &quot;display_order&quot;: 4
+}
+</code></pre>
+      <hr>
+      <h3 id="challenges"><code>challenges</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;campaign_id&quot;: &quot;ObjectId(Nullable)&quot;,
+  &quot;name&quot;: &quot;Weekend Warrior&quot;,
+  &quot;description&quot;: &quot;Complete 40 orders this weekend&quot;,
+  &quot;parameter_id&quot;: &quot;ObjectId&quot;,
+  &quot;threshold&quot;: 40.0,
+  &quot;period&quot;: &quot;event&quot;,
+  &quot;milestone_steps&quot;: [
+    { &quot;at&quot;: 10, &quot;reward_type&quot;: &quot;badge&quot;, &quot;reward_value&quot;: &quot;weekend_start&quot; },
+    { &quot;at&quot;: 40, &quot;reward_type&quot;: &quot;wallet&quot;, &quot;reward_value&quot;: 200 }
+  ],
+  &quot;is_active&quot;: true,
+  &quot;start_time&quot;: &quot;ISODate&quot;,
+  &quot;end_time&quot;: &quot;ISODate&quot;,
+  &quot;createdAt&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <hr>
+      <h3 id="riderchallengeprogress"><code>rider_challenge_progress</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;rider_id&quot;: &quot;ObjectId&quot;,
+  &quot;challenge_id&quot;: &quot;ObjectId&quot;,
+  &quot;current_value&quot;: 15.0,
+  &quot;milestones_hit&quot;: [10],
+  &quot;completed&quot;: false,
+  &quot;completed_at&quot;: null,
+  &quot;period_key&quot;: &quot;ev_weekend&quot;,
+  &quot;updated_at&quot;: &quot;ISODate&quot;
+}
+</code></pre>
+      <p><em>Indexes: <code>{ rider_id: 1, challenge_id: 1, period_key: 1 }</code> (Unique)</em></p>
+      <hr>
+      <h3 id="leaderboardsnapshots"><code>leaderboard_snapshots</code></h3>
+      <p><em>Note: <code>leaderboard_snapshots</code> will be stored in Redis cache which will be cleared weekly. So
+          leaderboard data will be created with <code>unique_key</code> from other DB schema's data.</em></p>
+      <pre><code class="language-json">{
+  "unique_key": "zomato:weekly:2025-W08:mumbai",
+  "rider_id": "ObjectId",
+  "rank": 42,
+  "score": 85.4,
+  "period": "weekly",
+  "period_key": "2025-W08",
+  "geo_zone": "Mumbai",
+  "snapshot_at": "ISODate"
+}
+</code></pre>
+      <hr>
+      <h3 id="notificationtemplates"><code>notification_templates</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;code&quot;: &quot;elite_bonus_earned&quot;,
+  &quot;channel&quot;: &quot;push&quot;,
+  &quot;title&quot;: &quot;🎉 Bonus Unlocked!&quot;,
+  &quot;body&quot;: &quot;Congratulations {{rider_name}}, you earned {{reward_value}}!&quot;,
+  &quot;is_active&quot;: true
+}
+</code></pre>
+      <hr>
+      <h3 id="auditlog"><code>audit_log</code></h3>
+      <pre><code class="language-json">{
+  &quot;_id&quot;: &quot;ObjectId&quot;,
+  &quot;entity_type&quot;: &quot;rule_set&quot;,
+  &quot;entity_id&quot;: &quot;ObjectId&quot;,
+  &quot;action&quot;: &quot;create&quot;,
+  &quot;actor_id&quot;: &quot;ObjectId&quot;,
+  &quot;actor_role&quot;: &quot;admin&quot;,
+  &quot;before&quot;: null,
+  &quot;after&quot;: { &quot;name&quot;: &quot;Elite Delivery Bonus&quot; },
+  &quot;ip_address&quot;: &quot;192.168.1.1&quot;,
+  &quot;timestamp&quot;: &quot;ISODate&quot;,
+  &quot;version&quot;: 1
+}
+</code></pre>
+      <hr>
+      <h2 id="index-strategy-summary">Index Strategy Summary</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Collection</th>
+            <th>Key Index</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>rider_events</code></td>
+            <td><code>{ rider_id: 1, session_date: 1 }</code></td>
+            <td>Fast score aggregation</td>
+          </tr>
+          <tr>
+            <td><code>rider_scores</code></td>
+            <td><code>{ period: 1, period_key: 1, total_score: -1 }</code></td>
+            <td>Leaderboard queries</td>
+          </tr>
+          <tr>
+            <td><code>rider_rewards</code></td>
+            <td><code>{ idempotency_key: 1 } (Unique)</code></td>
+            <td>Duplicate prevention</td>
+          </tr>
+          <tr>
+            <td><code>rule_sets</code></td>
+            <td><code>{ is_active: 1, valid_from: 1, valid_to: 1 }</code></td>
+            <td>Active rule lookup</td>
+          </tr>
+          <tr>
+            <td><code>campaigns</code></td>
+            <td><code>{ is_active: 1, start_time: 1, end_time: 1 }</code></td>
+            <td>Current campaign lookup</td>
+          </tr>
+          <tr>
+            <td><code>rider_challenge_progress</code></td>
+            <td><code>{ rider_id: 1, challenge_id: 1, period_key: 1 }</code></td>
+            <td>Progress tracking</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { primaryColor: '#6c63ff', primaryTextColor: '#e2e8f0', primaryBorderColor: '#2e3250', lineColor: '#6c63ff', secondaryColor: '#1a1d27', tertiaryColor: '#22263a', background: '#1a1d27', mainBkg: '#22263a', fontFamily: 'Inter, sans-serif' } });
+    hljs.highlightAll();
+  </script>
+</body>
+
+</html>

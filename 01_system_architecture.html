@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evify — System Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #22263a;
+            --border: #2e3250;
+            --accent: #6c63ff;
+            --accent2: #00d4aa;
+            --text: #e2e8f0;
+            --text-muted: #8892a4;
+            --code-bg: #161b22;
+            --table-head: #1e2236;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.75;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            min-width: 240px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 28px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar .logo {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .sidebar .doc-title {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        .nav-section a {
+            display: block;
+            padding: 5px 8px;
+            border-radius: 5px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.82rem;
+            transition: all 0.2s;
+        }
+
+        .nav-section a:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .nav-files {
+            margin-top: 20px;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+        }
+
+        .nav-files-title {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            padding: 0 8px;
+        }
+
+        .nav-files a {
+            display: block;
+            padding: 5px 8px;
+            border-radius: 5px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.78rem;
+            transition: all 0.2s;
+        }
+
+        .nav-files a:hover {
+            color: var(--accent2);
+        }
+
+        .nav-files a.current {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .main {
+            flex: 1;
+            padding: 44px 52px;
+            max-width: 1080px;
+        }
+
+        .doc-header {
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.15) 0%, rgba(0, 212, 170, 0.08) 100%);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 32px 36px;
+            margin-bottom: 44px;
+        }
+
+        .doc-header .badge {
+            display: inline-block;
+            background: rgba(108, 99, 255, 0.2);
+            color: var(--accent);
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 3px 9px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+        }
+
+        .doc-header h1 {
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .doc-header p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 36px 0 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 1.25rem;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent2);
+            margin: 22px 0 10px;
+        }
+
+        p {
+            color: var(--text);
+            margin-bottom: 12px;
+            font-size: 0.92rem;
+        }
+
+        .mermaid-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 16px 0;
+            overflow-x: auto;
+            text-align: center;
+        }
+
+        pre {
+            background: var(--code-bg) !important;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            overflow-x: auto;
+            margin: 12px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.84em;
+        }
+
+        :not(pre)>code {
+            background: rgba(108, 99, 255, 0.12);
+            color: var(--accent2);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin: 14px 0;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead tr {
+            background: var(--table-head);
+        }
+
+        thead th {
+            padding: 11px 14px;
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--surface2);
+        }
+
+        tbody td {
+            padding: 10px 14px;
+            font-size: 0.86rem;
+            color: var(--text);
+        }
+
+        strong {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        ul,
+        ol {
+            padding-left: 22px;
+            margin-bottom: 12px;
+        }
+
+        li {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 36px 0;
+        }
+
+        /* ── Architecture Diagram ─────────────────────────── */
+        .arch-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin: 24px 0 36px;
+            position: relative;
+        }
+
+        .arch-layer {
+            display: flex;
+            flex-direction: column;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .arch-layer-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+
+        .arch-layer-header .layer-icon {
+            font-size: 1rem;
+        }
+
+        .arch-layer-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 14px 20px 18px;
+        }
+
+        .arch-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid;
+            min-width: 120px;
+            flex: 1;
+            text-align: center;
+            transition: transform 0.15s, box-shadow 0.15s;
+            cursor: default;
+        }
+
+        .arch-node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .arch-node .node-icon {
+            font-size: 1.4rem;
+            line-height: 1;
+        }
+
+        .arch-node .node-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .arch-node .node-tech {
+            font-size: 0.65rem;
+            opacity: 0.75;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Layer colour themes */
+        .layer-input {
+            background: rgba(56, 189, 248, 0.05);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .layer-input .arch-layer-header {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+        }
+
+        .layer-input .arch-node {
+            background: rgba(56, 189, 248, 0.07);
+            border-color: rgba(56, 189, 248, 0.25);
+            color: #bae6fd;
+        }
+
+        .layer-engine {
+            background: rgba(108, 99, 255, 0.05);
+            border-color: rgba(108, 99, 255, 0.3);
+        }
+
+        .layer-engine .arch-layer-header {
+            background: rgba(108, 99, 255, 0.12);
+            color: #a78bfa;
+        }
+
+        .layer-engine .arch-node {
+            background: rgba(108, 99, 255, 0.08);
+            border-color: rgba(108, 99, 255, 0.25);
+            color: #ddd6fe;
+        }
+
+        .layer-reward {
+            background: rgba(251, 146, 60, 0.05);
+            border-color: rgba(251, 146, 60, 0.3);
+        }
+
+        .layer-reward .arch-layer-header {
+            background: rgba(251, 146, 60, 0.1);
+            color: #fb923c;
+        }
+
+        .layer-reward .arch-node {
+            background: rgba(251, 146, 60, 0.07);
+            border-color: rgba(251, 146, 60, 0.25);
+            color: #fed7aa;
+        }
+
+        .layer-infra {
+            background: rgba(0, 212, 170, 0.05);
+            border-color: rgba(0, 212, 170, 0.3);
+        }
+
+        .layer-infra .arch-layer-header {
+            background: rgba(0, 212, 170, 0.1);
+            color: #00d4aa;
+        }
+
+        .layer-infra .arch-node {
+            background: rgba(0, 212, 170, 0.07);
+            border-color: rgba(0, 212, 170, 0.25);
+            color: #99f6e4;
+        }
+
+        .layer-output {
+            background: rgba(52, 211, 153, 0.05);
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+
+        .layer-output .arch-layer-header {
+            background: rgba(52, 211, 153, 0.1);
+            color: #34d399;
+        }
+
+        .layer-output .arch-node {
+            background: rgba(52, 211, 153, 0.07);
+            border-color: rgba(52, 211, 153, 0.25);
+            color: #a7f3d0;
+        }
+
+        .layer-admin {
+            background: rgba(248, 113, 113, 0.05);
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
+        .layer-admin .arch-layer-header {
+            background: rgba(248, 113, 113, 0.1);
+            color: #f87171;
+        }
+
+        .layer-admin .arch-node {
+            background: rgba(248, 113, 113, 0.07);
+            border-color: rgba(248, 113, 113, 0.25);
+            color: #fecaca;
+        }
+
+        /* Connector between layers */
+        .arch-connector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 36px;
+            position: relative;
+        }
+
+        .arch-connector::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--from-col, #38bdf8), var(--to-col, #a78bfa));
+            transform: translateX(-50%);
+        }
+
+        .arch-connector::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 4px;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid var(--to-col, #a78bfa);
+        }
+
+        .arch-connector-label {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.62rem;
+            padding: 1px 8px;
+            border-radius: 20px;
+            z-index: 1;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stack-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            margin: 2px;
+            letter-spacing: 0.3px;
+        }
+
+        .sb-green {
+            background: rgba(0, 212, 170, 0.15);
+            color: var(--accent2);
+        }
+
+        .sb-purple {
+            background: rgba(108, 99, 255, 0.15);
+            color: #a78bfa;
+        }
+
+        .sb-orange {
+            background: rgba(251, 146, 60, 0.15);
+            color: #fb923c;
+        }
+
+        .sb-blue {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+        }
+
+        .sb-red {
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        @media(max-width:768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main {
+                padding: 22px 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <div class="logo">⚡ Evify</div>
+            <div class="doc-title">Gamification Engine</div>
+            <div class="nav-section">
+                <a href="#overview">Overview</a>
+                <a href="#architecture-diagram">High-Level Architecture Diagram</a>
+                <a href="#component-boundaries">Component Boundaries</a>
+                <a href="#internal-module-map-monolith">Internal Module Map (Monolith)</a>
+                <a href="#internal-event-emitter-topics">Internal Event Emitter Topics</a>
+                <a href="#layered-architecture">Layered Architecture</a>
+                <a href="#multi-tenant-isolation">Multi-Tenant Isolation</a>
+                <a href="#technology-stack-summary">Technology Stack Summary</a>
+            </div>
+            <div class="nav-files">
+                <div class="nav-files-title">All Documents</div>
+                <a href="01_system_architecture.html" class="current">01 · System Architecture</a>
+                <a href="02_database_schema.html">02 · Database Schema</a>
+                <a href="03_modules_1_to_6.html">03 · Modules 1–6</a>
+                <a href="04_modules_7_8_infra_flows.html">04 · Infra &amp; Flows</a>
+            </div>
+        </nav>
+        <main class="main">
+            <h1>Evify Gamification &amp; Reward Engine — System Architecture</h1>
+            <h2 id="overview">Overview</h2>
+            <p>The Evify Gamification &amp; Reward Engine is a <strong>monolithic, event-driven SaaS platform</strong>
+                built for delivery rider apps. It is designed to scale to 100,000+ riders across unlimited tenants with
+                zero-code configurability for adding new parameters, rules, rewards, or campaigns. It utilizes a
+                powerful visual workflow automation approach (via <code>json-rules-engine</code>) where Triggers,
+                Conditions, and Actions are easily stitched together by operations teams without requiring code changes.
+            </p>
+            <hr>
+            <h2 id="architecture-diagram">High-Level Architecture Diagram</h2>
+
+            <div class="arch-diagram">
+
+                <!-- Layer 0: Data Sources -->
+                <div class="arch-layer layer-input">
+                    <div class="arch-layer-header"><span class="layer-icon">📡</span> Data Sources — External Inputs
+                    </div>
+                    <div class="arch-layer-body">
+                        <div class="arch-node"><span class="node-icon">📦</span><span class="node-label">Order
+                                Management System</span><span class="node-tech">OMS / REST</span></div>
+                        <div class="arch-node"><span class="node-icon">🔋</span><span class="node-label">IoT / Battery
+                                APIs</span><span class="node-tech">Webhook / MQTT</span></div>
+                        <div class="arch-node"><span class="node-icon">🗓️</span><span class="node-label">Attendance /
+                                HR System</span><span class="node-tech">HR API</span></div>
+                        <div class="arch-node"><span class="node-icon">💰</span><span class="node-label">Salary /
+                                Finance Module</span><span class="node-tech">Internal API</span></div>
+                        <div class="arch-node"><span class="node-icon">📱</span><span class="node-label">Rider Mobile
+                                App</span><span class="node-tech">React Native</span></div>
+                    </div>
+                </div>
+
+                <div class="arch-connector" style="--from-col:#38bdf8;--to-col:#6c63ff;">
+                    <span class="arch-connector-label">HTTP / Webhook events → JWT auth + tenant routing</span>
+                </div>
+
+                <!-- Layer 1: Ingestion -->
+                <div class="arch-layer layer-engine">
+                    <div class="arch-layer-header"><span class="layer-icon">⬇️</span> Ingestion Layer — Evify Node.js
+                        Monolith</div>
+                    <div class="arch-layer-body">
+                        <div class="arch-node"><span class="node-icon">🚪</span><span class="node-label">API Gateway /
+                                Webhook Receiver</span><span class="node-tech">Express · Auth · Rate Limit</span></div>
+                        <div class="arch-node"><span class="node-icon">🔍</span><span class="node-label">Schema
+                                Validation</span><span class="node-tech">Joi Validation</span></div>
+                        <div class="arch-node"><span class="node-icon">⚙️</span><span class="node-label">Parameter
+                                Ingestion Engine</span><span class="node-tech">Normalize · Clamp · Deduplicate</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arch-connector" style="--from-col:#6c63ff;--to-col:#6c63ff;">
+                    <span class="arch-connector-label">rider.event.ingested → Internal EventEmitter</span>
+                </div>
+
+                <!-- Layer 2: Core Engine -->
+                <div class="arch-layer layer-engine">
+                    <div class="arch-layer-header"><span class="layer-icon">🧠</span> Workflow Automation Engine — Core
+                        Processing</div>
+                    <div class="arch-layer-body">
+                        <div class="arch-node"><span class="node-icon">⚡</span><span class="node-label">Score
+                                Engine</span><span class="node-tech">Weighted score · Redis ZADD</span></div>
+                        <div class="arch-node"><span class="node-icon">🔀</span><span class="node-label">Trigger
+                                Evaluator</span><span class="node-tech">Event-type matcher</span></div>
+                        <div class="arch-node"><span class="node-icon">📐</span><span class="node-label">Rule
+                                Engine</span><span class="node-tech">json-rules-engine</span></div>
+                        <div class="arch-node"><span class="node-icon">📢</span><span class="node-label">Campaign
+                                Engine</span><span class="node-tech">Geo · Time · Multiplier</span></div>
+                        <div class="arch-node"><span class="node-icon">🏆</span><span class="node-label">Challenges
+                                &amp; Badges</span><span class="node-tech">Gamification Logic</span></div>
+                    </div>
+                </div>
+
+                <div class="arch-connector" style="--from-col:#6c63ff;--to-col:#fb923c;">
+                    <span class="arch-connector-label">rule.matched → reward.triggered</span>
+                </div>
+
+                <!-- Layer 3: Reward Layer -->
+                <div class="arch-layer layer-reward">
+                    <div class="arch-layer-header"><span class="layer-icon">🎁</span> Reward Distribution Layer</div>
+                    <div class="arch-layer-body">
+                        <div class="arch-node"><span class="node-icon">🛡️</span><span class="node-label">Duplicate
+                                Guard</span><span class="node-tech">Idempotency SHA256</span></div>
+                        <div class="arch-node"><span class="node-icon">🔄</span><span class="node-label">BullMQ
+                                Workers</span><span class="node-tech">Redis-backed queues</span></div>
+                        <div class="arch-node"><span class="node-icon">💳</span><span class="node-label">Wallet Credit
+                                API</span><span class="node-tech">Internal Wallet</span></div>
+                        <div class="arch-node"><span class="node-icon">🔔</span><span class="node-label">Notification
+                                Controller</span><span class="node-tech">Firebase FCM · Twilio</span></div>
+                        <div class="arch-node"><span class="node-icon">📋</span><span class="node-label">Audit
+                                Logger</span><span class="node-tech">Append-only log</span></div>
+                    </div>
+                </div>
+
+                <div class="arch-connector" style="--from-col:#fb923c;--to-col:#00d4aa;">
+                    <span class="arch-connector-label">reads/writes → persistence &amp; cache</span>
+                </div>
+
+                <!-- Layer 4: Infrastructure -->
+                <div class="arch-layer layer-infra">
+                    <div class="arch-layer-header"><span class="layer-icon">🗄️</span> Infrastructure Layer — Cache
+                        &amp; Storage</div>
+                    <div class="arch-layer-body">
+                        <div class="arch-node"><span class="node-icon">⚡</span><span class="node-label">Redis
+                                Cluster</span><span class="node-tech">Score cache · Leaderboards · Rule cache ·
+                                BullMQ</span></div>
+                        <div class="arch-node"><span class="node-icon">🍃</span><span class="node-label">MongoDB
+                                Atlas</span><span class="node-tech">Config · Rules · Events · Logs</span></div>
+                    </div>
+                </div>
+
+                <div class="arch-connector" style="--from-col:#00d4aa;--to-col:#34d399;">
+                    <span class="arch-connector-label">score data → dashboards · rider.score.updated</span>
+                </div>
+
+                <!-- Layer 5: Outputs -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+                    <div class="arch-layer layer-output">
+                        <div class="arch-layer-header"><span class="layer-icon">📱</span> Rider Output</div>
+                        <div class="arch-layer-body" style="flex-direction:column;">
+                            <div class="arch-node"
+                                style="flex-direction:row;justify-content:flex-start;gap:10px;min-width:0;">
+                                <span class="node-icon">📊</span>
+                                <span><span class="node-label">Rider Dashboard</span>
+                                    <div class="node-tech">Score · Leaderboard · Earnings</div>
+                                </span>
+                            </div>
+                            <div class="arch-node"
+                                style="flex-direction:row;justify-content:flex-start;gap:10px;min-width:0;">
+                                <span class="node-icon">🏅</span>
+                                <span><span class="node-label">Badges &amp; Levels UI</span>
+                                    <div class="node-tech">Gamification Display</div>
+                                </span>
+                            </div>
+                            <div class="arch-node"
+                                style="flex-direction:row;justify-content:flex-start;gap:10px;min-width:0;">
+                                <span class="node-icon">🎯</span>
+                                <span><span class="node-label">Challenges UI</span>
+                                    <div class="node-tech">Progress Milestones</div>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="arch-layer layer-admin">
+                        <div class="arch-layer-header"><span class="layer-icon">🛠️</span> Admin Panel (No-Code)</div>
+                        <div class="arch-layer-body" style="flex-direction:column;">
+                            <div class="arch-node"
+                                style="flex-direction:row;justify-content:flex-start;gap:10px;min-width:0;">
+                                <span class="node-icon">⚙️</span>
+                                <span><span class="node-label">Parameter Configurator</span>
+                                    <div class="node-tech">Add metrics without code</div>
+                                </span>
+                            </div>
+                            <div class="arch-node"
+                                style="flex-direction:row;justify-content:flex-start;gap:10px;min-width:0;">
+                                <span class="node-icon">📐</span>
+                                <span><span class="node-label">Visual Rule Builder</span>
+                                    <div class="node-tech">Drag-and-drop conditions</div>
+                                </span>
+                            </div>
+                            <div class="arch-node"
+                                style="flex-direction:row;justify-content:flex-start;gap:10px;min-width:0;">
+                                <span class="node-icon">📢</span>
+                                <span><span class="node-label">Campaign Manager</span>
+                                    <div class="node-tech">Geo · Date · Multiplier</div>
+                                </span>
+                            </div>
+                            <div class="arch-node"
+                                style="flex-direction:row;justify-content:flex-start;gap:10px;min-width:0;">
+                                <span class="node-icon">📈</span>
+                                <span><span class="node-label">Analytics Dashboard</span>
+                                    <div class="node-tech">Reports &amp; Insights</div>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /grid -->
+            </div><!-- /arch-diagram -->
+
+            <hr>
+
+            <hr>
+            <h2 id="component-boundaries">Component Boundaries</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Responsibility</th>
+                        <th>Technology</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>API Gateway / Webhooks</strong></td>
+                        <td>Ingests events, enforces tenant isolation, rate limiting</td>
+                        <td>Node.js Express/Fastify</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Message Queue / Jobs</strong></td>
+                        <td>Async background jobs (Reward distribution, notifications)</td>
+                        <td>BullMQ (Redis-backed)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Parameter Ingestion</strong></td>
+                        <td>Validates, normalizes, stores rider event data</td>
+                        <td>Internal Monolith Module</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Score Engine</strong></td>
+                        <td>Computes weighted daily/weekly/monthly scores</td>
+                        <td>Internal Module + Redis</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rule Engine</strong></td>
+                        <td>Evaluates Workflow Triggers/Conditions/Actions</td>
+                        <td><code>json-rules-engine</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Campaign Engine</strong></td>
+                        <td>Time/geo/event-based rule overlays</td>
+                        <td>Internal Monolith Module</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gamification Automator</strong></td>
+                        <td>Challenges, leaderboards, levels, badges</td>
+                        <td>Internal Monolith Module</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Reward Distribution</strong></td>
+                        <td>Validates, de-dupes, credits, logs rewards</td>
+                        <td>Internal Module + BullMQ</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Admin Panel</strong></td>
+                        <td>No-code configuration of all engine components</td>
+                        <td>Next.js / React Admin</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Notification Controller</strong></td>
+                        <td>Push / SMS / in-app alert delivery logic</td>
+                        <td>Firebase FCM + Twilio</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Audit Logger</strong></td>
+                        <td>Append-only event store for compliance</td>
+                        <td>MongoDB Atlas</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Redis Cluster</strong></td>
+                        <td>Score cache, leaderboards, rule cache, job queues</td>
+                        <td>Redis Cluster</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MongoDB</strong></td>
+                        <td>Primary NoSQL store for config &amp; transactions</td>
+                        <td>MongoDB Atlas</td>
+                    </tr>
+                </tbody>
+            </table>
+            <hr>
+            <h2 id="internal-module-map-monolith">Internal Module Map (Monolith)</h2>
+            <div class="mermaid">
+                graph LR
+                subgraph NodeApp[&quot;Node.js Monolithic Application&quot;]
+                M_ING[Ingestion]
+                M_SCORE[Score Engine]
+                M_RULE[&quot;Rule Engine (json-rules-engine)&quot;]
+                M_CAMP[Campaign Engine]
+                M_REWARD[Reward Engine]
+                M_LEADER[Leaderboard]
+                M_NOTIF[Notification]
+                M_ADMIN[Admin API]
+                end
+
+                M_ING --&gt;|eventEmitter| M_SCORE
+                M_SCORE --&gt;|Internal call/Event| M_RULE
+                M_RULE --&gt;|rule matched| M_REWARD
+                M_RULE --&gt;|rule matched| M_LEADER
+                M_CAMP --&gt;|campaign context| M_RULE
+                M_REWARD --&gt;|BullMQ job| M_NOTIF
+                M_LEADER --&gt;|BullMQ job| M_NOTIF
+                M_ADMIN --&gt;|Internal event/Cache flush| M_RULE
+                M_ADMIN --&gt;|Internal event/Cache flush| M_SCORE
+
+            </div>
+            <hr>
+            <h2 id="internal-event-emitter-topics">Internal Event Emitter Topics</h2>
+            <p>Unlike a microservices architecture that requires Kafka, the monolithic platform relies on fast,
+                synchronouse/asynchronous internal Node.js <code>EventEmitter</code> and background job tracking.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Topic / Event</th>
+                        <th>Publisher</th>
+                        <th>Subscribers</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>rider.event.ingested</code></td>
+                        <td>Ingestion Engine</td>
+                        <td>Score Engine, Workflow Trigger Evaluator</td>
+                    </tr>
+                    <tr>
+                        <td><code>rider.score.updated</code></td>
+                        <td>Score Engine</td>
+                        <td>Leaderboard, Rule Engine, Dashboard Update</td>
+                    </tr>
+                    <tr>
+                        <td><code>rule.matched</code></td>
+                        <td>Rule Engine (<code>json-rules-engine</code>)</td>
+                        <td>Reward Engine, Gamification Actions</td>
+                    </tr>
+                    <tr>
+                        <td><code>reward.triggered</code></td>
+                        <td>Gamification Actions</td>
+                        <td>Reward Distribution Queue (BullMQ)</td>
+                    </tr>
+                    <tr>
+                        <td><code>reward.issued</code></td>
+                        <td>Reward Distribution Job</td>
+                        <td>Audit, Notification Controller</td>
+                    </tr>
+                    <tr>
+                        <td><code>campaign.activated</code></td>
+                        <td>Campaign Engine</td>
+                        <td>Rule Engine Cache / Evaluator</td>
+                    </tr>
+                    <tr>
+                        <td><code>leaderboard.updated</code></td>
+                        <td>Leaderboard Module</td>
+                        <td>Dashboard Controller, Notifications</td>
+                    </tr>
+                    <tr>
+                        <td><code>config.changed</code></td>
+                        <td>Admin API</td>
+                        <td>All internal caches (Score, Rules, Campaigns)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <hr>
+            <h2 id="layered-architecture">Layered Architecture</h2>
+            <pre><code>┌─────────────────────────────────────────────┐
+│           PRESENTATION LAYER                │
+│   Rider App  │  Admin Panel  │  Analytics   │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│           API / WEBHOOK LAYER               │
+│   Auth  │  Tenant Routing  │  Rate Limit    │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│      CORE MONOLITHIC PROCESS LAYER          │
+│  Score Engine │ json-rules-engine Workflow  │
+│  Reward Module │ Gamification Modules       │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│      BACKGROUND TASKS &amp; MESSAGING           │
+│  Internal EventEmitter │ BullMQ (Redis)     │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│              CACHE LAYER                    │
+│   Redis: Scores │ Leaderboards │ Rules      │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│             PERSISTENCE LAYER               │
+│  MongoDB (Config/Rules/Logs)                │
+│  Local Storage (Exports)                    │
+└─────────────────────────────────────────────┘
+</code></pre>
+            <hr>
+            <h2 id="multi-tenant-isolation">Multi-Tenant Isolation</h2>
+            <p>Each tenant (delivery company) operates in an <strong>independently isolated namespace</strong>:</p>
+            <ul>
+                <li>MongoDB: Separate <strong>database per tenant</strong> (<code>tenant_acme</code>,
+                    <code>tenant_zomato</code>)
+                </li>
+                <li>Redis: Tenant-prefixed keys (<code>t:{tenantId}:score:{riderId}</code>)</li>
+                <li>Background Jobs: Tenant-tagged queues or jobs in BullMQ</li>
+                <li>API Layer: JWT claims carry <code>tenantId</code> on every request</li>
+                <li>Admin Panel: Role-Based Access Control (RBAC) per tenant</li>
+            </ul>
+            <hr>
+            <h2 id="technology-stack-summary">Technology Stack Summary</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Technology</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Backend Application</td>
+                        <td>Node.js (Express / Fastify) - Monolith</td>
+                    </tr>
+                    <tr>
+                        <td>Rule Engine</td>
+                        <td><code>json-rules-engine</code> (Node.js library)</td>
+                    </tr>
+                    <tr>
+                        <td>Frontend Admin</td>
+                        <td>Next.js + React</td>
+                    </tr>
+                    <tr>
+                        <td>Job Queues</td>
+                        <td>BullMQ (Redis-backed)</td>
+                    </tr>
+                    <tr>
+                        <td>Primary DB</td>
+                        <td>MongoDB Atlas</td>
+                    </tr>
+                    <tr>
+                        <td>Caching</td>
+                        <td>Redis 7</td>
+                    </tr>
+                    <tr>
+                        <td>File Storage</td>
+                        <td>Local Storage / Volumes</td>
+                    </tr>
+                    <tr>
+                        <td>Push Notifications</td>
+                        <td>Firebase FCM</td>
+                    </tr>
+                    <tr>
+                        <td>Containerization</td>
+                        <td>Docker</td>
+                    </tr>
+                    <tr>
+                        <td>Orchestration / Scaling</td>
+                        <td>Docker Compose / Swarm / PM2 cluster mode</td>
+                    </tr>
+                    <tr>
+                        <td>CI/CD</td>
+                        <td>GitHub Actions</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </main>
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { primaryColor: '#6c63ff', primaryTextColor: '#e2e8f0', primaryBorderColor: '#2e3250', lineColor: '#6c63ff', secondaryColor: '#1a1d27', tertiaryColor: '#22263a', background: '#1a1d27', mainBkg: '#22263a', fontFamily: 'Inter, sans-serif' } });
+        hljs.highlightAll();
+    </script>
+</body>
+
+</html>
