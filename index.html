@@ -1,15 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Evify Documentation</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Evify Documentation</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0b0f19;
+  --card: #121826;
+  --accent: #7c5cff;
+  --accent2: #00e0b8;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --border: #1f2937;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: radial-gradient(circle at top left, #121826 0%, #0b0f19 60%);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+header {
+  text-align: center;
+  padding: 80px 20px 40px;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+header p {
+  color: var(--muted);
+  margin-top: 12px;
+  font-size: 1rem;
+}
+
+.container {
+  width: 100%;
+  max-width: 900px;
+  padding: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 28px;
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.25s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  border-color: var(--accent);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+}
+
+.card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.card p {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+footer {
+  margin-top: auto;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+</style>
 </head>
+
 <body>
-  <h1>Evify Documentation</h1>
-  <ul>
-    <li><a href="01_system_architecture.html">System Architecture</a></li>
-    <li><a href="02_database_schema.html">Database Schema</a></li>
-    <li><a href="03_modules_1_to_6.html">Modules 1–6</a></li>
-    <li><a href="04_modules_7_8_infra_flows.html">Infra & Flows</a></li>
-  </ul>
+
+<header>
+  <h1>⚡ Evify Documentation</h1>
+  <p>Gamification Engine Architecture & System Design</p>
+</header>
+
+<div class="container">
+  <div class="grid">
+    
+    <a href="01_system_architecture.html" class="card">
+      <h2>System Architecture</h2>
+      <p>High-level architecture, services, infrastructure layers and data flow.</p>
+    </a>
+
+    <a href="02_database_schema.html" class="card">
+      <h2>Database Schema</h2>
+      <p>MongoDB multi-tenant schema, collections, relationships and indexing strategy.</p>
+    </a>
+
+    <a href="03_modules_1_to_6.html" class="card">
+      <h2>Modules 1–6</h2>
+      <p>Core engine logic, scoring, campaigns, rewards and evaluation workflows.</p>
+    </a>
+
+    <a href="04_modules_7_8_infra_flows.html" class="card">
+      <h2>Infra & Flows</h2>
+      <p>Admin workflows, APIs, scaling strategy, infrastructure and reporting.</p>
+    </a>
+
+  </div>
+</div>
+
+<footer>
+  © 2026 Evify Gamification Engine
+</footer>
+
 </body>
 </html>
